@@ -1,0 +1,93 @@
+# See README for additional details
+
+# Configure budgets for single projects here
+projects:
+  - project_id: "<gcp-project-id>"
+    budget_type: "AMT"
+    budget_amount: 1000
+    products:
+      - "ALL"
+    alert_emails:
+      - "foo@bar.com"
+      - "baz@foo.com"
+    threshold_rules:
+      - threshold_percent: 1.0
+        spend_basis: 'CURRENT_SPEND'
+    include_credits: False
+    pubsub: False
+  - project_id: "<gcp-project-id>"
+    budget_type: "LASTMONTH"
+    budget_amount: 1000
+    products:
+      - "ALL"
+    alert_emails:
+      - "foo@bar.com"
+      - "baz@foo.com"
+    threshold_rules:
+      - threshold_percent: 0.9
+        spend_basis: 'FORECASTED_SPEND'
+    include_credits: False
+    pubsub: True
+    pubsub_topic: "projects/<gcp-project-id>/topics/<gcp-pubsub-topic-name>"
+
+# Configure budgets for all projects under a parent folder (direct children only, non recursive lookup)
+parent_folders:
+  - parent_folder_id: "1234567890123"
+    budget_type: "AMT"
+    budget_amount: 1000
+    products:
+      - "ALL"
+    alert_emails:
+      - "foo@bar.com"
+      - "baz@foo.com"
+    threshold_rules:
+      - threshold_percent: 1.0
+        spend_basis: 'CURRENT_SPEND'
+    include_credits: False
+    pubsub: False
+  - parent_folder_id: "1111111111111"
+    budget_type: "AMT"
+    budget_amount: 500
+    products:
+      - "ALL"
+    alert_emails:
+      - "foo@bar.com"
+    threshold_rules:
+      - threshold_percent: 1.0
+        spend_basis: 'CURRENT_SPEND'
+    include_credits: False
+    pubsub: True
+
+# Configure budgets for all projects that match a list of labels
+labels:
+  - label_list:
+      - "foo": "bar"
+      - "environment": "prod"
+      - "baz": "123"
+    budget_type: "AMT"
+    budget_amount: 100
+    products:
+      - "ALL"
+    alert_emails:
+      - "foo@bar.com"
+    threshold_rules:
+      - threshold_percent: 1.0
+        spend_basis: 'CURRENT_SPEND'
+    include_credits: False
+    pubsub: True
+
+# Configure budgets for all projects not captured by the previous sections. One budget per project.
+# Currently not implemented
+# This can potentially exceed the current GCP limit of 5k Budgets
+#default:
+#  budget_type: "AMT"
+#  budget_amount: 1000
+#  products:
+#    - "ALL"
+#  alert_emails:
+#    - "foo@bar.com"
+#  threshold_rules:
+#    - threshold_percent: 1.0
+#      spend_basis: 'CURRENT_SPEND'
+#  include_credits: False
+#  pubsub: True

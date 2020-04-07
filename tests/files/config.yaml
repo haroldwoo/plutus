@@ -1,0 +1,538 @@
+good:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_project_id:
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+project_id_wrong_type:
+  project_id: 100
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_budget_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_budget_amount:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_threshold_rules:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_include_credits:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_pubsub:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+
+user_configured_display_name:
+  project_id: "moz-fx-data-blah-1234"
+  display_name: "my budget"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+budget_type_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: 100
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+budget_amount_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: "1000"
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+pubsub_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: 100
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+include_credits_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: "100"
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+budget_type_wrong_val:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "FAIL"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+products_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products: "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+alert_emails_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails: "fail@mozilla.com, ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+threshold_rules_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules: "fail"
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+threshold_rules_invalid_spend_basis:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND_FAIL'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+threshold_percent_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: "FAIL"
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+threshold_rules_invalid_list_object:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+pubsub_topic_wrong_type:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: 100
+
+# Verifying parent folder id configs
+good_parent:
+  parent_folder_id: "1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_parent_folder_id:
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+parent_folder_id_with_morekeys:
+  parent_folder_id: "1234"
+  project_id: "shouldfail"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+# Verifying label configs
+good_labels:
+  label_list:
+    - 'key': 'value'
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+missing_label_list:
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+label_list_wrong_type:
+  label_list: "key, value"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+label_list_len:
+  label_list:
+    - 'key': 'value'
+    - 'key2': 'value2'
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+label_list_obj_wrong_type:
+  label_list:
+    - "FAIL"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+label_list_obj_wrong_type2:
+  label_list:
+    - key: "value"
+      key2: "value2"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+# Verify default configs
+good_default:
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+configured_project_id:
+  project_id: "moz-fx-data-blah-1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+configured_parent_folder_id:
+  parent_folder_id: "1234"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
+configured_label_list:
+  label_list:
+    - "key": "value"
+  budget_type: "AMT"
+  budget_amount: 1000
+  products:
+    - "ALL"
+  alert_emails:
+    - "foo@bar.com"
+    - "ops@baz.com"
+  threshold_rules:
+    - threshold_percent: 1.0
+      spend_basis: 'CURRENT_SPEND'
+  include_credits: False
+  pubsub: True
+  pubsub_topic: "projects/some-project/topics/some-topic"
+
