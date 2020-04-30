@@ -4,7 +4,7 @@ GCP cost monitoring. Budget and Quota monitoring/alerting.
 
 ## Components:
 
-Budget manager - Using yaml configuration, will GetAndUpdateOrCreate() budget. Additional state is also saved in SQL.
+Budget manager - Using yaml configuration, will GetAndUpdateOrCreate() budgets. Additional state is also saved in SQL.
 
 Budget monitor - Pubsub consumer that will alert to various channels based on thresholds.
 
