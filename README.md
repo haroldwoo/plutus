@@ -14,7 +14,7 @@ More to be added later (Project manager, Quota monitor, Billing manager, Quota m
 See example config.yaml for a layout example. Configuration is broken into subsections:
 
 ### Important notes: 
-- Currently there is a bug with the budgets api where if you set Pubsub to True, and later to False, the API will not reflect this change.
+- Currently there is a bug with the budgets api updatebudget call where if you set Pubsub to True, and later to False, the API will not reflect this change.
 - There is also another bug in the python resource manager client where listing projects by more than one label returns a union of projects rather than an intersection. So if using labels, restrict it to a single label until this is resolved.
 
 ## projects
