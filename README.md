@@ -2,6 +2,7 @@
 
 GCP cost monitoring. Budget and Quota monitoring/alerting.
 
+
 ## Components:
 
 Budget manager - Using yaml configuration, will GetAndUpdateOrCreate() budgets. Additional state is also saved in SQL.
@@ -12,10 +13,6 @@ More to be added later (Project manager, Quota monitor, Billing manager, Quota m
 
 # Configuration
 See example config.yaml for a layout example. Configuration is broken into subsections:
-
-### Important notes: 
-- Currently there is a bug with the budgets api updatebudget call where if you set Pubsub to True, and later to False, the API will not reflect this change.
-- There is also another bug in the python resource manager client where listing projects by more than one label returns a union of projects rather than an intersection. So if using labels, restrict it to a single label until this is resolved.
 
 ## projects
 | Name | Description | Type | Default | Required |
@@ -50,3 +47,7 @@ These options will be configured for each subsection (projects, parent_folders, 
 | include\_credits | Whether to include GCP credits towards the running budget total | bool | False | yes |
 | pubsub | Whether to send budget alerts to pubsub. This will be used by the budget monitor to send alerts via email, slack, pagerduty  | bool | False | yes |
 | pubsub\_topic | Format projects/PROJECTID/topics/TOPICNAME | string | projects/moz-fx-billing-projectid/topics/plutus-budget-notifications | no |
+
+### Important notes: 
+- Currently there is a bug with the budgets api updatebudget call where if you set Pubsub to True, and later to False, the API will not reflect this change.
+- There is also another bug in the python resource manager client where listing projects by more than one label returns a union of projects rather than an intersection. So if using labels, restrict it to a single label until this is resolved.
