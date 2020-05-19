@@ -12,7 +12,7 @@ Budget monitor - Pubsub consumer that will alert to various channels based on th
 More to be added later (Project manager, Quota monitor, Billing manager, Quota manager)
 
 # Configuration
-See example config.yaml for a layout example. Configuration is broken into subsections:
+See example plutus/budget_manager/sample_config.yaml for a layout example. Configuration is broken into subsections:
 
 ## projects
 | Name | Description | Type | Default | Required |
