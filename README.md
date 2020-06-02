@@ -2,6 +2,7 @@
 
 GCP cost monitoring. Budget and Quota monitoring/alerting.
 
+![](images/plutus-arch2.png)
 
 ## Components:
 
