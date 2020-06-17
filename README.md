@@ -1,6 +1,6 @@
-# plutus - WIP
+# plutus
 
-GCP cost monitoring. Budget and Quota monitoring/alerting.
+GCP cost monitoring. Budget monitoring/alerting. Quota monitoring is a WIP
 
 ![](images/plutus-arch2.png)
 
