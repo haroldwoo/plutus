@@ -1,0 +1,117 @@
+# Copy of circleci used for our repo to build and push image and configs.
+# Note that our github.com/mozilla-services/dataops repo is private,
+# and plutus is a subdirectory at mozilla-services/dataops/plutus, so paths will need to change
+# if you are using this as a base example.
+#
+# CIRCLECI ENV VARS
+# GCLOUD_SERVICE_KEY - service account key for gsutil rsync config yaml to gcs, and pushing containers to gcr
+# GOOGLE_PROJECT_ID - xxxxx
+# GOOGLE_COMPUTE_ZONE - us-west1-b
+#
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: docker:18.02.0-ce
+    working_directory: ~/mozilla-services/dataops
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker build -t app:build plutus
+
+  test:
+    docker:
+      - image: python:3.7
+    working_directory: ~/mozilla-services/dataops
+    steps:
+      - checkout
+      # Test config.yaml is valid before uploading to GCS
+      - run: pip install markus[datadog]==2.0.0 PyYAML==5.3.1 pytest flake8 protobuf3-to-dict==0.1.5 google-api-core
+      - run: python plutus/verify_config.py plutus/config.yaml
+      - run: python -m py_compile plutus/plutus/budget_manager/*.py
+      - run: python -m py_compile plutus/plutus/lib/*.py
+      - run: python -m flake8 --max-line-length=100 plutus/
+      - run: pytest plutus/tests/
+
+
+  deploy:
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/mozilla-services/dataops
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: |
+          printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' "$CIRCLE_SHA1" "$CIRCLE_TAG" "$CIRCLE_PROJECT_USERNAME" "$CIRCLE_PROJECT_REPONAME" "$CIRCLE_BUILD_URL" > plutus/version.json
+      - run:
+          name: Build container
+          command: |
+            docker build -t app:build plutus
+      - run:
+          name: Configure gcloud
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+            gcloud auth configure-docker
+      - run:
+          name: Deploy to GCR
+          command: |
+            DOCKER_IMAGE="gcr.io/${GOOGLE_PROJECT_ID}/plutus-image-name-goes-here"
+            # Deploy master
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag app:build "${DOCKER_IMAGE}:latest"
+              docker push "${DOCKER_IMAGE}:latest"
+            elif  [ ! -z "${CIRCLE_TAG}" ]; then
+            # Deploy a release tag...
+              echo "${DOCKER_IMAGE}:${CIRCLE_TAG}"
+              docker tag app:build "${DOCKER_IMAGE}:${CIRCLE_TAG}"
+              docker images
+              docker push "${DOCKER_IMAGE}:${CIRCLE_TAG}"
+            fi
+
+  sync_config:
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/mozilla-services/dataops
+    steps:
+      - checkout
+      - run: |
+          echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+          gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+          gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+          gsutil cp plutus/config.yaml gs://some-bucket-for-your-prod-config-where-plutus-will-expect/
+
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+
+      - test:
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
+
+      - sync_config:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
