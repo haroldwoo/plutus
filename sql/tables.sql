@@ -24,6 +24,15 @@ CREATE TABLE budgets (
        col_3 VARCHAR(255)
 );
 
+CREATE TABLE alerts (
+       budget_id VARCHAR(255) PRIMARY KEY NOT NULL,
+       last_alert DATETIME NOT NULL,
+       col_1 VARCHAR(255),
+       col_2 VARCHAR(255),
+       col_3 VARCHAR(255)
+);
+
+
 CREATE TABLE projects (
        project_id VARCHAR(255) PRIMARY KEY NOT NULL,
        project_number VARCHAR(255) NOT NULL,

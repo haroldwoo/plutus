@@ -1,3 +1,4 @@
+import os
 import yaml
 
 from pytest import fixture
@@ -13,7 +14,7 @@ from plutus.budget_manager.verify import (
 def config_dict():
     ''' Loads test configuration yaml file into dict. '''
 
-    test_config_file = './tests/files/config.yaml'
+    test_config_file = os.path.join(os.path.dirname(__file__), './files/config.yaml')
     with open(test_config_file, "r") as f:
         dict = yaml.load(f, Loader=yaml.SafeLoader)
         return dict
