@@ -39,7 +39,7 @@ metrics = markus.get_metrics(APP)
 @click.option('--gcs-file-path', envvar='GCS_FILE_PATH', default=None)
 @click.option('--billing-account-id', envvar='BILLING_ACCOUNT_ID', default=None)
 @click.option('--default-pubsub-topic',
-              default='projects/moz-fx-billing-212017/topics/plutus-budget-notifications')
+              default='projects/moz-fx-data-dataops/topics/plutus-budget-notifications')
 @click.option('--mysql-host', envvar='MYSQL_HOST', default='localhost')
 @click.option('--mysql-port', envvar='MYSQL_PORT', default='3306')
 @click.option('--mysql-user', envvar='MYSQL_USER', default='root')
@@ -127,12 +127,25 @@ def main(gcs_bucket, gcs_file_path, billing_account_id, default_pubsub_topic,
                 project = ProjectBudget(parent_dict, config_type,
                                         billing_account_id, default_pubsub_topic)
 
-                budget = gcp.get_and_update_or_create_budget(project)
+                existing_project_budget_id = gcp.has_existing_project_budget(project)
 
-                if budget is not None:
-                    with mysql_conn.cursor() as mysql_cursor:
-                        upsert_budget(mysql_cursor, budget, project.project_id,
-                                      config_type, project.alert_emails)
+                if existing_project_budget_id is None:
+                    # No project one off budget configured for this projectid
+                    budget = gcp.get_and_update_or_create_budget(project)
+
+                    if budget is not None:
+                        with mysql_conn.cursor() as mysql_cursor:
+                            upsert_budget(mysql_cursor, budget, project.project_id,
+                                          config_type, project.alert_emails)
+                else:
+                    log.info(f"Skipping creating parent project budget for \
+                              {p.project_id} since exiting plutus project budget found.")
+
+                    existing_parent_budget_id = gcp.has_existing_parent_budget(
+                        parent_id, project)
+                    if existing_parent_budget_id is not None:
+                        # We have a configured plutus project budget. Delete parent budget
+                        gcp.delete_budget(existing_parent_budget_id)
 
         else:
             log.error("Parent folder config verification failed.")
@@ -158,12 +171,24 @@ def main(gcs_bucket, gcs_file_path, billing_account_id, default_pubsub_topic,
                 project = ProjectBudget(label_dict, config_type,
                                         billing_account_id, default_pubsub_topic)
 
-                budget = gcp.get_and_update_or_create_budget(project)
+                existing_project_budget_id = gcp.has_existing_project_budget(project)
 
-                if budget is not None:
-                    with mysql_conn.cursor() as mysql_cursor:
-                        upsert_budget(mysql_cursor, budget, project.project_id,
-                                      config_type, project.alert_emails)
+                if existing_project_budget_id is None:
+                    # No project one off budget configured for this projectid
+                    budget = gcp.get_and_update_or_create_budget(project)
+
+                    if budget is not None:
+                        with mysql_conn.cursor() as mysql_cursor:
+                            upsert_budget(mysql_cursor, budget, project.project_id,
+                                          config_type, project.alert_emails)
+                else:
+                    log.info(f"Skipping creating label project budget for \
+                              {p.project_id} since exiting plutus project budget found.")
+
+                    existing_labels_budget_id = gcp.has_existing_labels_budget(project)
+                    if existing_labels_budget_id is not None:
+                        # We have a configured plutus project budget. Delete labels budget
+                        gcp.delete_budget(existing_labels_budget_id)
 
         else:
             log.error("Labels config verification failed.")

@@ -1,0 +1,4 @@
+boto3
+slackclient==2.5.0
+PyMySQL==0.9.3
+pypd

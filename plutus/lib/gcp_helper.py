@@ -61,6 +61,55 @@ class GcpHelper:
 
         return budgets
 
+    def has_existing_project_budget(self, project):
+        '''
+        Given a project object, returns budget id if a plutus project specific budget
+        already exists. None otherwise.
+
+        '''
+
+        project_number = self.get_project_number(project.project_id)
+        all_budgets = self.get_budgets_by_project(project, project_number)
+
+        for budget in all_budgets:
+            if budget.display_name == f"plutus-{project.project_id}":
+                # Return budget id e.g. billingAccounts/{billingAccountId}/budgets/{budgetId}
+                return budget.name
+
+        return None
+
+    def has_existing_parent_budget(self, parent_id, project):
+        '''
+        Given a parent id and project object, returns budget id if a plutus parent budget
+        already exists. None otherwise.
+
+        '''
+
+        project_number = self.get_project_number(project.project_id)
+        all_budgets = self.get_budgets_by_project(project, project_number)
+
+        for budget in all_budgets:
+            if budget.display_name == f"plutus-{parent_id}-{project.project_id}":
+                return budget.name
+
+        return None
+
+    def has_existing_labels_budget(self, project):
+        '''
+        Given a project object, returns budget id  if a plutus labels budget
+        already exists. None otherwise.
+
+        '''
+
+        project_number = self.get_project_number(project.project_id)
+        all_budgets = self.get_budgets_by_project(project, project_number)
+
+        for budget in all_budgets:
+            if budget.display_name == f"plutus-labels-{project.project_id}":
+                return budget.name
+
+        return None
+
     def sync_config_with_gcp_budget(self, project, budget_dict, project_number):
         '''
         Returns two values.
@@ -276,6 +325,12 @@ class GcpHelper:
             metrics.incr("gcp_api_error_count",
                          tags=["type:billing.update.value",
                                f"display_name:{changed_budget['display_name']}"])
+
+    def delete_budget(self, budget_id):
+        ''' Deletes an existing GCP budget. '''
+
+        self.logger.info(f"Deleting budget for {budget_id}...")
+        self.billing_client.delete_budget(budget_id)
 
     def get_and_update_or_create_budget(self, project):
         '''
