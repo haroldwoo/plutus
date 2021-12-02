@@ -11,38 +11,36 @@ from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
 
 # See https://api.slack.com/docs/token-types#bot for more info
-BOT_ACCESS_TOKEN = os.environ['OAUTH_TOKEN']
+BOT_ACCESS_TOKEN = os.environ["OAUTH_TOKEN"]
 
-CHANNEL_ID = os.environ['CHANNEL_ID']
+CHANNEL_ID = os.environ["CHANNEL_ID"]
 
-MYSQL_HOST = os.environ['MYSQL_HOST']
-MYSQL_USER = os.environ['MYSQL_USER']
-MYSQL_PASS = os.environ['MYSQL_PASS']
-MYSQL_DB = os.environ['MYSQL_DB']
+MYSQL_HOST = os.environ["MYSQL_HOST"]
+MYSQL_USER = os.environ["MYSQL_USER"]
+MYSQL_PASS = os.environ["MYSQL_PASS"]
+MYSQL_DB = os.environ["MYSQL_DB"]
 
-SMTP_EMAIL = os.environ['SMTP_EMAIL']
-ACCESS_KEY = os.environ['AWS_ACCESS_KEY_ID']
-SECRET_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+SMTP_EMAIL = os.environ["SMTP_EMAIL"]
+ACCESS_KEY = os.environ["AWS_ACCESS_KEY_ID"]
+SECRET_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 
-PAGERDUTY_KEY = os.environ['PAGERDUTY_KEY']
+PAGERDUTY_KEY = os.environ["PAGERDUTY_KEY"]
 
 slack_client = slack.WebClient(token=BOT_ACCESS_TOKEN)
 
-mysql_conn = pymysql.connect(host=MYSQL_HOST,
-                             user=MYSQL_USER,
-                             password=MYSQL_PASS,
-                             db=MYSQL_DB,
-                             autocommit=True)
+mysql_conn = pymysql.connect(
+    host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASS, db=MYSQL_DB, autocommit=True
+)
 
 
 def send_alert(budget_id):
-    ''' Determine whether to send an alert or not based on last alert time. '''
+    """Determine whether to send an alert or not based on last alert time."""
 
     with mysql_conn.cursor() as cursor:
         sql = "SELECT `last_alert` FROM `alerts` WHERE `budget_id`=%s"
         cursor.execute(sql, [budget_id])
         result = cursor.fetchone()
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         if result is None:
             # No record found, insert new row into table
@@ -56,9 +54,9 @@ def send_alert(budget_id):
             # Untuple the sql result. This will return a datetime.datetime object.
             last_alert_time = result[0]
 
-            if (last_alert_time < past):
+            if last_alert_time < past:
                 # If last alerted over a day ago, update table and send alert
-                sql = "UPDATE `alerts` set `last_alert`=%s WHERE `budget_id=%s`"
+                sql = "UPDATE `alerts` set `last_alert`=%s WHERE `budget_id`=%s"
                 cursor.execute(sql, (now, budget_id))
                 return True
             else:
@@ -74,58 +72,63 @@ def get_emails_for_budget(budget_id):
             emails = None
         else:
             # result should be a tuple
-            emails = ''.join(result)
+            emails = "".join(result)
         return emails
 
 
-def send_email(emails, message):
+def send_email(emails, message, project_id=None):
     subject = "Plutus - GCP Budget alert"
+    if project_id is not None:
+        subject += f" - {project_id}"
     charset = "UTF-8"
-    client = boto3.client('ses',
-                          aws_access_key_id=ACCESS_KEY,
-                          aws_secret_access_key=SECRET_KEY,
-                          region_name="us-west-2")
+    client = boto3.client(
+        "ses",
+        aws_access_key_id=ACCESS_KEY,
+        aws_secret_access_key=SECRET_KEY,
+        region_name="us-west-2",
+    )
 
     try:
         response = client.send_email(
             Destination={
-                'ToAddresses': emails,
+                "ToAddresses": emails,
             },
             Message={
-                'Body': {
-                    'Text': {
-                        'Charset': charset,
-                        'Data': message,
+                "Body": {
+                    "Text": {
+                        "Charset": charset,
+                        "Data": message,
                     },
                 },
-                'Subject': {
-                    'Charset': charset,
-                    'Data': subject,
+                "Subject": {
+                    "Charset": charset,
+                    "Data": subject,
                 },
             },
             Source=SMTP_EMAIL,
         )
     except ClientError as e:
-        print(e.response['Error']['Message'])
+        print(e.response["Error"]["Message"])
     else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
+        print(f"Email sent! Message ID: {response['MessageId']}")
 
 
 def send_pagerduty_alert(message, budget_id):
     pypd.api_key = PAGERDUTY_KEY
 
     # create a version 2 event
-    pypd.EventV2.create(data={
-        'routing_key': PAGERDUTY_KEY,
-        'event_action': 'trigger',
-        'dedup_key': budget_id,
-        'payload': {
-            'summary': message,
-            'severity': 'error',
-            'source': 'plutus-budget-monitor(cloud function)',
+    pypd.EventV2.create(
+        data={
+            "routing_key": PAGERDUTY_KEY,
+            "event_action": "trigger",
+            "dedup_key": budget_id,
+            "payload": {
+                "summary": message,
+                "severity": "error",
+                "source": "plutus-budget-monitor(cloud function)",
+            },
         }
-    })
+    )
 
 
 def post_to_channel(message):
@@ -137,26 +140,26 @@ def decode_budget_data(data):
     return json.loads(data)
 
 
-def budget_notify(pubsub_message):
-    notification_attrs = pubsub_message['attributes']
-    notification_data = decode_budget_data(pubsub_message['data'])
+def budget_notify(notification_attrs, notification_data):
 
-    billing_account_id = notification_attrs['billingAccountId']
-    budget_id = notification_attrs['budgetId']
-    budget_name = notification_data['budgetDisplayName']
-    cost_amount = notification_data['costAmount']
-    budget_amount = notification_data['budgetAmount']
+    billing_account_id = notification_attrs["billingAccountId"]
+    budget_id = notification_attrs["budgetId"]
+    budget_name = notification_data["budgetDisplayName"]
+    cost_amount = notification_data["costAmount"]
+    budget_amount = notification_data["budgetAmount"]
 
-    if notification_data.get('alertThresholdExceeded'):
+    if notification_data.get("alertThresholdExceeded"):
         # From google documentation, key exists only if a threshold was exceeded
-        alert_threshold_exceeded = notification_data.get('alertThresholdExceeded')
+        alert_threshold_exceeded = notification_data.get("alertThresholdExceeded")
 
         pattern = re.compile("^plutus-(labels|\d*-)*(.*)$")  # noqa: W605
         match = pattern.match(budget_name)
 
         message = ""
+        project_id = None
         if match:
-            message += f"Budget exceeded for project: {match.group(2)}. "
+            project_id = match.group(2)
+            message += f"Budget exceeded for project: {project_id}. "
 
         message += f"budget_name: {budget_name}\
         budget_id: {budget_id},\
@@ -175,16 +178,21 @@ def budget_notify(pubsub_message):
             # Send email alert
             emails = get_emails_for_budget(full_budget_id)
             if emails is not None:
-                send_email(emails.split(","), message)
+                send_email(emails.split(","), message, project_id)
             else:
-                post_to_channel(f"Send email failed. Budget id {full_budget_id} not found in db.")
+                post_to_channel(
+                    f"Send email failed. Budget id {full_budget_id} not found in db."
+                )
 
 
 # Entrypoint of GCP Cloud Function
 def process_pubsub(data, context):
-    pubsub_message = data
+    notification_attrs = data["attributes"]
+    notification_data = decode_budget_data(data["data"])
+
     try:
-        budget_notify(pubsub_message)
+        budget_notify(notification_attrs, notification_data)
     except Exception as err:
-        post_to_channel(f"Plutus budget notify failed: {data} - {err} - <@hwoo>")
+        post_to_channel(f"Plutus budget notify failed: {err}")
+        post_to_channel(f"{notification_attrs} - {notification_data}")
         raise

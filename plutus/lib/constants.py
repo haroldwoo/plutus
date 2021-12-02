@@ -1,6 +1,6 @@
 # Constants
 
-APP = 'plutus_budget_manager'
+APP = "plutus_budget_manager"
 PLUTUS_CONFIG_TYPE_PROJECT = "PROJECT"
 PLUTUS_CONFIG_TYPE_PARENT = "PARENT"
 PLUTUS_CONFIG_TYPE_LABEL = "LABEL"
