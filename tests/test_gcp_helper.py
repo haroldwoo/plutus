@@ -153,7 +153,7 @@ def test_change_units(project):
     assert returned_budget != budget_dict
     # Assert that the value has now changed to reflect the project config of 1k
     assert returned_budget["amount"] == {
-        "specified_amount": {"currency_code": "USD", "units": "1000"}
+        "specified_amount": {"currency_code": "USD", "units": 1000}
     }
 
 

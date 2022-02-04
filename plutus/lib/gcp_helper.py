@@ -131,6 +131,9 @@ class GcpHelper:
 
     def sync_config_with_gcp_budget(self, project, budget_dict, project_number):
         """
+        Takes as a parameter a budget_dict which is a dict representation of a gcp proto budget
+        and a project which is a projectBudget object created from yaml config.
+
         Returns two values.
         1. Boolean whether configuration and gcp budget match.
         2. A changed_budget object, with any diffs between config and GCP. Returns None if error.
@@ -181,15 +184,18 @@ class GcpHelper:
                 )
                 return False, None
 
-            # Google rpcs changed units to string
-            elif budget_dict["amount"]["specified_amount"]["units"] != str(
+            # Google rpcs changed units to string, and back to int again
+            # When we call MessageToDict on a proto budget, the units are represented
+            # as a string. But when we want to call the API later, it expects int.
+            # We will cast both to str for comparison, in case google changes this again
+            elif str(budget_dict["amount"]["specified_amount"]["units"]) != str(
                 project.budget_amount
             ):
                 self.logger.info("Change detected in budget units amount")
                 ret_val = False
-                changed_budget["amount"]["specified_amount"]["units"] = str(
-                    project.budget_amount
-                )
+                changed_budget["amount"]["specified_amount"][
+                    "units"
+                ] = project.budget_amount
 
         elif project.budget_type == "LASTMONTH":
             if budget_dict["amount"].get("last_period_amount") is None:
@@ -457,7 +463,7 @@ class GcpHelper:
         """Deletes an existing GCP budget."""
 
         self.logger.info(f"Deleting budget for {budget_id}...")
-        self.billing_client.delete_budget(budget_id)
+        self.billing_client.delete_budget(name=budget_id)
 
     def get_and_update_or_create_budget(self, project):
         """
