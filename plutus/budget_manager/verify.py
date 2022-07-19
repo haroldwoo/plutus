@@ -196,4 +196,12 @@ def _verify_budget_values(project_dict):
             )
             return False
 
+    if "alert_slack_channel_id" in project_dict:
+        if not isinstance(project_dict["alert_slack_channel_id"], str):
+            log.error(
+                f"Config error. 'alert_slack_channel_id' must be of type str. \
+                      Got {project_dict['alert_slack_channel_id']}."
+            )
+            return False
+
     return True

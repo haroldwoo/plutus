@@ -24,4 +24,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
+# Temporarily add GCP Service Account credentials for testing, but do not commit
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/app/donotcommitcreds-plutus.json
+
 ENTRYPOINT ["python", "/app/plutus/budget_manager/main.py"]

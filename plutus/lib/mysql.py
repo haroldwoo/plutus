@@ -14,7 +14,9 @@ log = logging.getLogger(f"{APP}.mysql")
 metrics = markus.get_metrics(f"{APP}.mysql")
 
 
-def upsert_budget(mysql_cursor, budget, project_id, config_type, alert_emails):
+def upsert_budget(
+    mysql_cursor, budget, project_id, config_type, alert_emails, alert_slack_channel_id
+):
     """Upserts a row in the budgets mysql table."""
 
     budget_dict = MessageToDict(
@@ -111,7 +113,8 @@ pubsub_topic,
 owner_emails,
 created_date,
 last_modified,
-config_type
+config_type,
+alert_slack_channel_id
 )
 VALUES
 (
@@ -128,7 +131,8 @@ VALUES
 '{owner_emails}',
 '{created_date}',
 '{last_modified}',
-'{config_type}'
+'{config_type}',
+'{alert_slack_channel_id}'
 )
 ON DUPLICATE KEY UPDATE
 display_name = '{display_name}',
@@ -142,7 +146,8 @@ pubsub = {pubsub},
 pubsub_topic = '{pubsub_topic}',
 owner_emails = '{owner_emails}',
 last_modified = '{last_modified}',
-config_type = '{config_type}'
+config_type = '{config_type}',
+alert_slack_channel_id = '{alert_slack_channel_id}'
 """
 
     try:

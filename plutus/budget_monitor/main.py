@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 # See https://api.slack.com/docs/token-types#bot for more info
 BOT_ACCESS_TOKEN = os.environ["OAUTH_TOKEN"]
 
-CHANNEL_ID = os.environ["CHANNEL_ID"]
+DEFAULT_CHANNEL_ID = os.environ["CHANNEL_ID"]
 
 MYSQL_HOST = os.environ["MYSQL_HOST"]
 MYSQL_USER = os.environ["MYSQL_USER"]
@@ -26,6 +26,8 @@ SECRET_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 
 PAGERDUTY_KEY = os.environ["PAGERDUTY_KEY"]
 
+# for the plutusbot to work with additional slack channels,
+# you first need to invite that bot to the additional slack channel(s)
 slack_client = slack.WebClient(token=BOT_ACCESS_TOKEN)
 
 mysql_conn = pymysql.connect(
@@ -131,8 +133,24 @@ def send_pagerduty_alert(message, budget_id):
     )
 
 
-def post_to_channel(message):
-    slack_client.chat_postMessage(channel=CHANNEL_ID, text=message)
+def get_slack_channel_for_budget(budget_id):
+    with mysql_conn.cursor() as cursor:
+        sql = "SELECT `alert_slack_channel_id` FROM `budgets` WHERE `budget_id`=%s"
+        cursor.execute(sql, [budget_id])
+        result = cursor.fetchone()
+        # see https://github.com/mozilla-services/dataops/pull/80
+        if result[0] is None or result[0] == "None":
+            slack_channel = None
+        else:
+            # result should be a tuple
+            slack_channel = "".join(result)
+        return slack_channel
+
+
+def post_to_channel(message, additional_channel_id=None):
+    if additional_channel_id is not None:
+        slack_client.chat_postMessage(channel=additional_channel_id, text=message)
+    slack_client.chat_postMessage(channel=DEFAULT_CHANNEL_ID, text=message)
 
 
 def decode_budget_data(data):
@@ -165,15 +183,17 @@ def budget_notify(notification_attrs, notification_data):
         budget_id: {budget_id},\
         budget_amount: {budget_amount},\
         cost_amount: {cost_amount},\
-        alert_threshold_exceeded: {alert_threshold_exceeded}"
+        alert_threshold_exceeded: {alert_threshold_exceeded},\
+        budget_url: https://console.cloud.google.com/billing?project={project_id}"
 
         send_pagerduty_alert(message, budget_id)
 
         full_budget_id = f"billingAccounts/{billing_account_id}/budgets/{budget_id}"
 
         if send_alert(full_budget_id):
-            # Send slack alert
-            post_to_channel(message)
+            # Send slack alert(s)
+            additional_channel_id = get_slack_channel_for_budget(full_budget_id)
+            post_to_channel(message, additional_channel_id=additional_channel_id)
 
             # Send email alert
             emails = get_emails_for_budget(full_budget_id)

@@ -1,0 +1,28 @@
+version: '2.1'
+
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    command: ['--init-file', '/app/sql/tables.sql']
+    volumes:
+      - $PWD:/app
+    environment:
+       MYSQL_ROOT_PASSWORD: secret
+       MYSQL_DATABASE: plutus
+
+  statsd:
+    image: statsd/statsd
+    ports:
+      - '8125:8125'
+      - '8126:8126'
+      
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    volumes:
+      - $PWD:/app
+    command: "true"

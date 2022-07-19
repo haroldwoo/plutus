@@ -58,6 +58,20 @@ These options will be configured for each subsection (projects, parent_folders, 
 | include\_credits | Whether to include GCP credits towards the running budget total | bool | False | yes |
 | pubsub | Whether to send budget alerts to pubsub. This will be used by the budget monitor to send alerts via email, slack, pagerduty  | bool | False | yes |
 | pubsub\_topic | Format projects/PROJECTID/topics/TOPICNAME | string | projects/moz-fx-data-dataops/topics/plutus-budget-notifications | no |
+| alert\_slack\_channel\_id | Slack channel id for alert notifications | string | 'G01548794SE' | no | 
+
+## Development
+
+`make build` will build containers
+
+`make up` will run the statsd and mysql containers
+
+`docker run --network=host plutus_app:latest --billing-account-id xxx --dry-run` will run the application in dry run mode
+
+`docker run --network=host plutus_app:latest --billing-account-id xxx` will run the application in a semi prod fashion (using local mysql, local config file in the container, but actually run GCP API commands to update budgets.)
+
+Note: everytime you modify the config.yaml or any code, you will need to run a make build again (the container will copy contents of your local working dir into it's /app dir. So usually the testing cycle is: make changes, `make build`, then `docker run`.
+
 
 ### Important notes: 
 - Currently there is a bug with the budgets api updatebudget call where if you set Pubsub to True, and later to False, the API will not reflect this change.

@@ -54,8 +54,8 @@ metrics = markus.get_metrics(APP)
 )
 # Used for local testing without container, and without using gcs file
 # Local mode loads config file from filesystem
-@click.option("--local-mode", is_flag=True)
-@click.option("--dry-run", is_flag=True)
+@click.option("--local-mode", is_flag=True, default=True)
+@click.option("--dry-run", is_flag=True, default=False)
 def main(
     gcs_bucket,
     gcs_file_path,
@@ -79,7 +79,7 @@ def main(
 
     # Load config.yaml file
     if local_mode:
-        with open("config.yaml", "r") as f:
+        with open("/app/config.yaml", "r") as f:
             budget_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
         setup_metrics("localhost")
@@ -119,17 +119,25 @@ def main(
             project = ProjectBudget(
                 project_dict, config_type, billing_account_id, default_pubsub_topic
             )
-            budget = gcp.get_and_update_or_create_budget(project)
 
-            if budget is not None:
-                with mysql_conn.cursor() as mysql_cursor:
-                    upsert_budget(
-                        mysql_cursor,
-                        budget,
-                        project.project_id,
-                        config_type,
-                        project.alert_emails,
-                    )
+            if dry_run:
+                log.info(
+                    f"Dry run: would have ran get_and_update_or_create_budget for project: {project.project_id}"
+                )
+            else:
+                log.info(f"Processing project: {project.project_id}...")
+                budget = gcp.get_and_update_or_create_budget(project)
+
+                if budget is not None:
+                    with mysql_conn.cursor() as mysql_cursor:
+                        upsert_budget(
+                            mysql_cursor,
+                            budget,
+                            project.project_id,
+                            config_type,
+                            project.alert_emails,
+                            project.alert_slack_channel_id,
+                        )
 
         else:
             log.error("Project config verification failed.")
@@ -162,21 +170,30 @@ def main(
 
                 if existing_project_budget_id is None:
                     # No project one off budget configured for this projectid
-                    budget = gcp.get_and_update_or_create_budget(project)
+                    if dry_run:
+                        log.info(
+                            f"Dry run (parent folders): would have ran get_and_update_or_create_budget for project: {project.project_id}"
+                        )
+                    else:
+                        log.info(
+                            f"Processing parent_id: {parent_id}, project: {project.project_id}..."
+                        )
+                        budget = gcp.get_and_update_or_create_budget(project)
 
-                    if budget is not None:
-                        with mysql_conn.cursor() as mysql_cursor:
-                            upsert_budget(
-                                mysql_cursor,
-                                budget,
-                                project.project_id,
-                                config_type,
-                                project.alert_emails,
-                            )
+                        if budget is not None:
+                            with mysql_conn.cursor() as mysql_cursor:
+                                upsert_budget(
+                                    mysql_cursor,
+                                    budget,
+                                    project.project_id,
+                                    config_type,
+                                    project.alert_emails,
+                                    project.alert_slack_channel_id,
+                                )
                 else:
                     log.info(
                         f"Skipping creating parent project budget for \
-                              {p.project_id} since exiting plutus project budget found."
+                              {p.project_id} since existing plutus project budget found."
                     )
 
                     existing_parent_budget_id = gcp.has_existing_parent_budget(
@@ -221,21 +238,30 @@ def main(
 
                 if existing_project_budget_id is None:
                     # No project one off budget configured for this projectid
-                    budget = gcp.get_and_update_or_create_budget(project)
+                    if dry_run:
+                        log.info(
+                            f"Dry run (labels): would have ran get_and_update_or_create_budget for project: {project.project_id}"
+                        )
+                    else:
+                        log.info(
+                            f"Processing labels: {labels_filter}, project: {project.project_id}..."
+                        )
+                        budget = gcp.get_and_update_or_create_budget(project)
 
-                    if budget is not None:
-                        with mysql_conn.cursor() as mysql_cursor:
-                            upsert_budget(
-                                mysql_cursor,
-                                budget,
-                                project.project_id,
-                                config_type,
-                                project.alert_emails,
-                            )
+                        if budget is not None:
+                            with mysql_conn.cursor() as mysql_cursor:
+                                upsert_budget(
+                                    mysql_cursor,
+                                    budget,
+                                    project.project_id,
+                                    config_type,
+                                    project.alert_emails,
+                                    project.alert_slack_channel_id,
+                                )
                 else:
                     log.info(
                         f"Skipping creating label project budget for \
-                              {p.project_id} since exiting plutus project budget found."
+                              {p.project_id} since existing plutus project budget found."
                     )
 
                     existing_labels_budget_id = gcp.has_existing_labels_budget(project)
@@ -267,7 +293,7 @@ def main(
                     # No budget exists for this project, so we create one
                     default_dict['project_id'] = project_id
 
-                    # TODO - add and test
+                    # TODO - add and test, also add dry_run logic
                     # project = ProjectBudget(default_dict, config_type,
                     #           billing_account_id, default_pubsub_topic)
                     log.info(f"Creating default budget for plutus-default-{project_id}")

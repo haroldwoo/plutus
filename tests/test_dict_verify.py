@@ -20,6 +20,7 @@ def project_dict():
         "include_credits": False,
         "pubsub": True,
         "pubsub_topic": "projects/some-project/topics/some-topic",
+        "alert_slack_channel_id": "C0123456AB",
     }
     return dict
 
@@ -36,6 +37,7 @@ def parent_dict():
         "include_credits": False,
         "pubsub": True,
         "pubsub_topic": "projects/some-project/topics/some-topic",
+        "alert_slack_channel_id": "C0123456AB",
     }
     return dict
 
@@ -52,6 +54,7 @@ def label_dict():
         "include_credits": False,
         "pubsub": True,
         "pubsub_topic": "projects/some-project/topics/some-topic",
+        "alert_slack_channel_id": "C0123456AB",
     }
     return dict
 
@@ -67,6 +70,7 @@ def default_dict():
         "include_credits": False,
         "pubsub": True,
         "pubsub_topic": "projects/some-project/topics/some-topic",
+        "alert_slack_channel_id": "C0123456AB",
     }
     return dict
 
@@ -159,6 +163,16 @@ def test_threshold_rules_invalid_list_object(project_dict):
 def test_pubsub_topic_wrong_type(project_dict):
     project_dict["pubsub_topic"] = 1234
     assert verify_project_yaml(project_dict) is False
+
+
+def test_alert_slack_channel_id_wrong_type(project_dict):
+    project_dict["alert_slack_channel_id"] = 12345
+    assert verify_project_yaml(project_dict) is False
+
+
+def test_alert_slack_channel_id_optional(project_dict):
+    del project_dict["alert_slack_channel_id"]
+    assert verify_project_yaml(project_dict) is True
 
 
 # Parent folder config tests

@@ -1,10 +1,10 @@
 -- To be ran on mysql
 
-CREATE DATABASE plutus;
+CREATE DATABASE IF NOT EXISTS plutus;
 
 USE plutus;
 
-CREATE TABLE budgets (
+CREATE TABLE IF NOT EXISTS budgets (
        budget_id VARCHAR(255) PRIMARY KEY NOT NULL,
        display_name VARCHAR(255) NOT NULL,
        project_id VARCHAR(255) NOT NULL,
@@ -19,12 +19,13 @@ CREATE TABLE budgets (
        created_date DATETIME NOT NULL,
        last_modified DATETIME NOT NULL,
        config_type VARCHAR(255) NOT NULL,
+       alert_slack_channel_id VARCHAR(255),
        col_1 VARCHAR(255),
        col_2 VARCHAR(255),
        col_3 VARCHAR(255)
 );
 
-CREATE TABLE alerts (
+CREATE TABLE IF NOT EXISTS alerts (
        budget_id VARCHAR(255) PRIMARY KEY NOT NULL,
        last_alert DATETIME NOT NULL,
        col_1 VARCHAR(255),
@@ -33,7 +34,7 @@ CREATE TABLE alerts (
 );
 
 
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
        project_id VARCHAR(255) PRIMARY KEY NOT NULL,
        project_number VARCHAR(255) NOT NULL,
        project_name VARCHAR(255),

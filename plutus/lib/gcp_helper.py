@@ -370,6 +370,9 @@ class GcpHelper:
         }
 
         try:
+            self.logger.info(
+                f"Creating budget for parent: {parent},\n and budget: {budget}"
+            )
             response = self.billing_client.create_budget(parent=parent, budget=budget)
             metrics.incr(
                 "gcp_api_request_count",
@@ -414,6 +417,10 @@ class GcpHelper:
         try:
             # update_budget now expects a proto or dict with a budget key and update_mask key
             changed_budget_dict = {"budget": changed_budget}
+            # Explicitly cast units field to a INT. Google has changed apis in the past on what type they want
+            changed_budget["amount"]["specified_amount"]["units"] = int(
+                changed_budget["amount"]["specified_amount"]["units"]
+            )
             response = self.billing_client.update_budget(changed_budget_dict)
             metrics.incr(
                 "gcp_api_request_count",

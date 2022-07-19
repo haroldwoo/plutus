@@ -27,6 +27,7 @@ class ProjectBudget:
     include_credits - bool - Include GCP credits in the budget calculations
     pubsub - bool - Send budget alerts to pubsub? Required for pagerduty/slack
     pubsub_topic - str - Optional. Will default to default_pubsub_topic
+    alert_slack_channel_id - str - Optional. Will send notifications to this channel plus the default plutus channel.
 
     billing_account_id - str - GCP billing account id
     display_name - budget display name
@@ -48,6 +49,9 @@ class ProjectBudget:
 
         if "pubsub_topic" not in project_dict:
             self.pubsub_topic = default_pubsub_topic
+
+        if "alert_slack_channel_id" not in project_dict:
+            self.alert_slack_channel_id = None
 
         self.config_type = config_type
         if config_type == PLUTUS_CONFIG_TYPE_PROJECT:
