@@ -54,7 +54,7 @@ metrics = markus.get_metrics(APP)
 )
 # Used for local testing without container, and without using gcs file
 # Local mode loads config file from filesystem
-@click.option("--local-mode", is_flag=True, default=True)
+@click.option("--local-mode", is_flag=True, default=False)
 @click.option("--dry-run", is_flag=True, default=False)
 def main(
     gcs_bucket,
@@ -79,6 +79,11 @@ def main(
 
     # Load config.yaml file
     if local_mode:
+        if gcs_bucket is not None or gcs_file_path is not None:
+            log.warn(
+                f"You are using local mode, and gcs_bucket ({gcs_bucket}) and gcs_file_path ({gcs_file_path}) will not be used."
+            )
+
         with open("/app/config.yaml", "r") as f:
             budget_dict = yaml.load(f, Loader=yaml.SafeLoader)
 

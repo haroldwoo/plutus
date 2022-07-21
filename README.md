@@ -66,9 +66,9 @@ These options will be configured for each subsection (projects, parent_folders, 
 
 `make up` will run the statsd and mysql containers
 
-`docker run --network=host plutus_app:latest --billing-account-id xxx --dry-run` will run the application in dry run mode
+`docker run --network=host plutus_app:latest --billing-account-id xxx --local-mode --dry-run` will run the application in dry run mode and local mode (use local config.yaml in the container)
 
-`docker run --network=host plutus_app:latest --billing-account-id xxx` will run the application in a semi prod fashion (using local mysql, local config file in the container, but actually run GCP API commands to update budgets.)
+`docker run --network=host plutus_app:latest --billing-account-id xxx --local-mode` will run the application in a semi prod fashion (using local mysql, local config file in the container, but actually run GCP API commands to update budgets.)
 
 Note: everytime you modify the config.yaml or any code, you will need to run a make build again (the container will copy contents of your local working dir into it's /app dir. So usually the testing cycle is: make changes, `make build`, then `docker run`.
 

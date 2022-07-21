@@ -19,5 +19,5 @@ stop:
 	docker-compose stop
 
 up:
-	docker-compose up
+	docker-compose up db statsd
 
