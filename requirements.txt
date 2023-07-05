@@ -13,7 +13,7 @@ google-cloud-billing-budgets==1.5.1
 google-cloud-logging==1.15.0
 google-cloud-resource-manager==0.30.2
 google-cloud-storage==1.27.0
-grpcio==1.47.0
+grpcio==1.53.0
 markus[datadog]==2.2.0
 protobuf==3.20.1
 protobuf3-to-dict==0.1.5
