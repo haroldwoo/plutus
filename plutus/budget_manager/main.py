@@ -3,6 +3,7 @@ import click
 import logging
 import markus
 import pymysql
+import re
 import sys
 import yaml
 
@@ -14,9 +15,11 @@ from plutus.budget_manager.verify import (
     # verify_default_yaml
 )
 
+from google.cloud import asset_v1
 from google.cloud.billing.budgets_v1.services.budget_service import BudgetServiceClient
-from google.cloud import resource_manager
+from google.cloud import resourcemanager_v3
 from google.cloud import storage
+from google.protobuf.json_format import MessageToDict
 
 from plutus.lib.constants import (
     APP,
@@ -80,7 +83,7 @@ def main(
     # Load config.yaml file
     if local_mode:
         if gcs_bucket is not None or gcs_file_path is not None:
-            log.warn(
+            log.warning(
                 f"You are using local mode, and gcs_bucket ({gcs_bucket}) and gcs_file_path ({gcs_file_path}) will not be used."
             )
 
@@ -100,7 +103,8 @@ def main(
 
     # Setup gcp helper
     billing_client = BudgetServiceClient()
-    resource_manager_client = resource_manager.Client()
+    resource_manager_client = resourcemanager_v3.ProjectsClient()
+
     gcp = GcpHelper(billing_client, resource_manager_client)
 
     # Setup mysql connection pool
@@ -162,9 +166,9 @@ def main(
         config_type = PLUTUS_CONFIG_TYPE_PARENT
 
         if verify_parent_yaml(parent_dict):
-            parent_filter = {"parent.id": parent_id}
+            parent_filter = f"folders/{parent_id}"
 
-            for p in resource_manager_client.list_projects(parent_filter):
+            for p in resource_manager_client.list_projects(parent=parent_filter):
                 # Overwrite 'project_id' key for each project under parent folder
                 parent_dict["project_id"] = p.project_id
                 project = ProjectBudget(
@@ -232,9 +236,47 @@ def main(
                     labels_filter[f"labels.{key}"] = row[key]
 
             # Find projects that match the labels
-            for p in resource_manager_client.list_projects(filter_params=labels_filter):
+            # In the old resource manager api v0.30.5, we used list_projects with a labels filter
+            # Now in the new resource manager 1.10.x, the list_projects doesn't support it anymore.
+            # And search_projects(), will return projects that match ANY of the labels rather than doing a
+            # logical AND. So lets try the new beta cloud asset inventory api
+            asset_client = asset_v1.AssetServiceClient()
+            scope = "organizations/442341870013"
+            asset_types = ["cloudresourcemanager.googleapis.com/Project"]
+            order_by = "project"
+
+            # Construct query string from map
+            labels_filter_strings = [f"{k}:{v}" for k, v in labels_filter.items()]
+            query = " AND ".join(labels_filter_strings)
+
+            log.info(f"query filter is: {query}")
+
+            response = asset_client.search_all_resources(
+                request={
+                    "scope": scope,
+                    "query": query,
+                    "asset_types": asset_types,
+                    "order_by": order_by,
+                }
+            )
+
+            for p in response:
+                proto_dict = MessageToDict(p._pb)
                 # Overwrite the 'project_id' key for each project that matches labels
-                label_dict["project_id"] = p.project_id
+                # We do this because the old ProjectBudget constructor takes in a project dict
+                # TODO - we can later adjust the ProjectBudget class to take a project_number
+                # instead, which is easily fetched from the response without this protobuf stuff
+                project_id_from_proto = proto_dict["additionalAttributes"]["projectId"]
+                label_dict["project_id"] = project_id_from_proto
+
+                metrics.incr(
+                    "gcp_api_request_count",
+                    tags=[
+                        "type:asset_inventory.search_all",
+                        f"project_id:{project_id_from_proto}",
+                    ],
+                )
+
                 project = ProjectBudget(
                     label_dict, config_type, billing_account_id, default_pubsub_topic
                 )
@@ -321,7 +363,64 @@ def main(
         sys.exit(1)
     """
 
-    # Count budgets for gauge metric
+    # Start delete defunct project logic here #
+    # Save a list of all project's project numbers. e.g. projects/12345
+    all_gcp_project_numbers = []
+
+    # We don't use resource manager client's list_projects() method to save all projects because the call is not recursive
+    # Calling search_projects() with no arguments returns all projects that the SA has access to.
+    # The search_projects() function call is eventually consistent. From google docs: "this means
+    # that a newly created project may not appear in the results or recent updates to an existing
+    # project may not be reflected in the results.
+    page_result = resource_manager_client.search_projects()
+    for response in page_result:
+        all_gcp_project_numbers.append(response.name)
+
+    all_gcp_projects_count = len(all_gcp_project_numbers)
+    log.info(f"total number of gcp projects is: {all_gcp_projects_count}")
+    metrics.gauge("plutus.all_gcp_projects_count", value=int(all_gcp_projects_count))
+
+    # Iterate over all budgets and rm budgets attached to defunct projects
+    list_budgets_result = billing_client.list_budgets(
+        parent=f"billingAccounts/{billing_account_id}"
+    )
+
+    delete_count = 0
+    for response in list_budgets_result:
+        pattern = re.compile("^plutus-.*")
+        match = pattern.match(response.display_name)
+        if not match:
+            log.warning(
+                f"budget {response.display_name} is not a plutus budget. skipping..."
+            )
+            continue
+
+        # The projects filter in plutus budgets should only have 1 element
+        if len(response.budget_filter.projects) == 1:
+            project_number = response.budget_filter.projects[0]
+        else:
+            log.warning(
+                f"budget: '{response.display_name}' has more than one project configured. Most likely non plutus budget?"
+            )
+            continue
+        if project_number not in all_gcp_project_numbers:
+            log.info(
+                f"budget {response.display_name} found but contains project_number: {project_number} which no longer exists."
+            )
+            delete_count = delete_count + 1
+            if dry_run:
+                log.info(
+                    f"Dry run is set. We would have deleted budget: {response.display_name}"
+                )
+            else:
+                log.info(f"Deleting defunct budget: {response.display_name}")
+                gcp.delete_budget(response.name)
+                metrics.incr("deleted_budget_count")
+
+    # Sanity check
+    log.info(f"delete count is: {delete_count}")
+
+    # Count total budgets for gauge metric
     with mysql_conn.cursor() as mysql_cursor:
         count_budgets(mysql_cursor)
 

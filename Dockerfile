@@ -1,9 +1,9 @@
-FROM python:3.7-slim
+FROM python:3.9-slim
 MAINTAINER Harold Woo <hwoo@mozilla.com>
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        apt-transport-https ca-certificates build-essential curl git libpq-dev python-dev \
+        apt-transport-https ca-certificates build-essential curl git libpq-dev \
         default-libmysqlclient-dev gettext sqlite3 libffi-dev libsasl2-dev \
         lsb-release gnupg emacs vim && \
     CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \

@@ -3,12 +3,11 @@ import copy
 import logging
 import markus
 
-from google.protobuf.json_format import MessageToDict
-
 import json
+import re
 import sys
 from google.api_core.exceptions import GoogleAPICallError, RetryError
-
+from google.protobuf.json_format import MessageToDict
 
 metrics = markus.get_metrics(APP + ".gcphelper")
 
@@ -27,12 +26,41 @@ class GcpHelper:
         """Given a GCP project id, return the associated GCP project number."""
         # Ensure that the configured project_id actually exists in GCP
         try:
-            project_object = self.resource_manager_client.fetch_project(project_id)
+            page_result = self.resource_manager_client.search_projects(
+                query=f"projectId:{project_id}"
+            )
             metrics.incr(
                 "gcp_api_request_count",
-                tags=["type:resource_manager.fetch", f"project_id:{project_id}"],
+                tags=["type:resource_manager.search", f"project_id:{project_id}"],
             )
-            project_number = project_object.number
+
+            # We only search for a single project id, so the search_projects() shouldn't return more than 1
+            response_count = 0
+            for response in page_result:
+                if response.project_id == project_id:
+                    response_count = response_count + 1
+                    project_object = response
+
+            # Only one of the paginated results should match project_id
+            if response_count == 1:
+                regex = "^projects/(\d+)"
+                pattern = re.compile(regex)
+                name = project_object.name if project_object is not None else "notfound"
+                if pattern.match(name):
+                    m = pattern.match(name)
+                    project_number = m.group(1)
+                else:
+                    self.logger.error(
+                        f"Error matching regex while comparing {name} to regex:{regex}"
+                    )
+                    sys.exit(1)
+            else:
+                self.logger.error(
+                    f"search_projects() yielded a count of {response_count}, expected 1 only."
+                )
+                self.logger.error(f"page result was {page_result}")
+                sys.exit(1)
+
             return project_number
         except Exception as err:
             self.logger.error(
@@ -40,7 +68,10 @@ class GcpHelper:
             )
             metrics.incr(
                 "error_count",
-                tags=["type:fetch_project_id_err", f"project_id:{project_id}"],
+                tags=[
+                    "type:search_projects_by_projectid_err",
+                    f"project_id:{project_id}",
+                ],
             )
             sys.exit(1)
 
