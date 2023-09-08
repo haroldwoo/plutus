@@ -29,7 +29,7 @@ from plutus.lib.constants import (
     # PLUTUS_CONFIG_TYPE_DEFAULT
 )
 
-from plutus.lib.mysql import upsert_budget, count_budgets
+from plutus.lib.mysql import upsert_budget
 from plutus.lib.gcp_helper import GcpHelper
 from plutus.budget_manager.project_budget import ProjectBudget
 
@@ -386,6 +386,7 @@ def main(
     )
 
     delete_count = 0
+    budget_count = 0
     for response in list_budgets_result:
         pattern = re.compile("^plutus-.*")
         match = pattern.match(response.display_name)
@@ -403,6 +404,9 @@ def main(
                 f"budget: '{response.display_name}' has more than one project configured. Most likely non plutus budget?"
             )
             continue
+
+        budget_count = budget_count + 1
+
         if project_number not in all_gcp_project_numbers:
             log.info(
                 f"budget {response.display_name} found but contains project_number: {project_number} which no longer exists."
@@ -419,10 +423,10 @@ def main(
 
     # Sanity check
     log.info(f"delete count is: {delete_count}")
+    log.info(f"budget count is: {budget_count}")
 
     # Count total budgets for gauge metric
-    with mysql_conn.cursor() as mysql_cursor:
-        count_budgets(mysql_cursor)
+    metrics.gauge("plutus.budget_count", value=int(budget_count))
 
     log.info("Plutus run complete.")
 
